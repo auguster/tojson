@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ ! -z "$*" ]
+then
+	keys=$(echo $*)
+else
+	read keys
+fi	
+	
+keys=$(echo $keys |xargs |tr -s ' ' '\n' |xargs -i echo -e \"{}\")
+
+lines=$(echo "$keys" |wc -l)
+
+while read valine
+do
+	parsed=$(echo -n $valine |xargs |tr -s ' ' '\n')
+	count=$(echo "$parsed" |wc -l)
+
+	if [ $lines -lt $count ]
+	then
+		nvalues=$(echo "$parsed" |head -n $(( $lines - 1 )) |xargs -i echo -e \"{}\")
+		tvalues=$(echo "$parsed" |tail -n +$lines |xargs -i echo -e \\\"{}\\\" |xargs |tr -s ' ' ',')
+		values=$(echo -e "$nvalues""\n""[$tvalues]")
+	else
+		values=$(echo "$parsed" |xargs -i echo -e \"{}\")
+	fi
+
+	echo -n "{"
+	echo -n $(paste -d ":" <( echo -n "$keys" ) <( echo -n "$values" )) |tr -s ' ' ','
+	echo "}"
+done
